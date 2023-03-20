@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+</head>
+<body>
+    <h1>Group name : {{groupkaname}}</h1>
+    <textarea id="text-message" cols="100" rows="30">
+        {% for chat in chats %}
+        {{chat.content}}
+        {% endfor %}
+    </textarea><br>
+    <input type="text" id="text-box"><button type="button" id="send">Send</button>
+    {{ groupkaname|json_script:'group-name' }}
+
+    <script>
+        const groupName = JSON.parse(document.getElementById
+        ('group-name').textContent)
+        console.log(groupName,'GROUP NAME IS',typeof(groupName))
+        var ws = new WebSocket(
+            'ws://' 
+            + window.location.host
+            + '/ws/sc/' 
+            + groupName 
+            + '/'
+        )
+
+        ws.onopen = function(event){
+            console.log('Connection Established',event,typeof(event))
+        }
+        ws.onmessage = function(event){
+            console.log('Message from server is',event,typeof(event),event.data,typeof(event.data))
+            const data =JSON.parse(event.data)
+            document.getElementById('text-message').value += ( data.message +'/n')
+        }
+        ws.onclose = function(event){
+            console.log('Connection Closed',event,typeof(event))
+        }
+        document.getElementById('send').onclick = function(event){
+            data = document.getElementById('text-box').value
+            console.log(data,typeof(data),'data is')
+            ws.send(JSON.stringify({
+                'message':data
+            }))
+            document.getElementById('text-box').value = ""
+        }
+    </script>
+</body>
+</html>
